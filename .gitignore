@@ -1,0 +1,6 @@
+# Ignorar .venv
+backend/.venv/
+
+# Ignorar pycache
+backend/**/*.pyc
+backend/__pycache__/

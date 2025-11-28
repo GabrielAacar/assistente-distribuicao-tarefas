@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Distribuição de Tarefas</title>
+  <link rel="stylesheet" href="styles/style.css">
+  <link rel="stylesheet" href="styles/modal.css">
+</head>
+<body>
+
+<header>
+  <h1>📦 Painel de Distribuição de Tarefas</h1>
+</header>
+
+<main class="grid">
+
+  <!-- IMPORTAÇÃO -->
+  <section class="card fx-column-down">
+    <h2>1️⃣ Importar relatório de tarefas</h2>
+    <input type="file" id="fileInput">
+    <label for="fileInput" class="button">📂 Selecionar arquivo</label>
+    <small>CSV ou Excel</small>
+  </section>
+
+  <!-- PARÂMETROS -->
+  <section class="card ">
+    <h2>2️⃣ Quantidade máxima por DT</h2>
+    <input type="number" id="defaultMax" placeholder="Valor padrão" value="3" />
+  </section>
+
+  <!-- USUÁRIOS POR ZONA -->
+  <section class="card fx-column-down">
+    <h2>3️⃣ Lista de DTs</h2>
+    <div id="zonas"></div>
+    <button class="button" onclick="addDT()">Inserir DTs</button>
+    <small> Se houver dts especificas, adicione aqui</small>
+  </section>
+
+  <!-- USUÁRIOS POR ZONA -->
+  <section class="card fx-column-down">
+    <h2>4️⃣ Usuários por Zona</h2>
+    
+    <button class="button" onclick="addZona()">Novo Usuario</button>
+    <button class="button red" onclick="clearUsers()"> Limpar Lista</button>
+    <small>💾 Fica salvo no navegador</small>
+  </section>
+
+  <!-- STATUS -->
+  <section class="card full fx-side-by-side">
+
+    <div class="card full fr-fr">
+      <h2>Informações</h2>
+      <div class="full fx-side-by-side">
+        <div class="fr-fr" id="dtParams"></div>
+        <div class="fr-fr" id="zonas">
+          <!-- Distribuição usuarios por zona -->
+          <div class="fx-column-down">
+            <div id="userList"></div>
+        </div>
+      </div>
+    </div>
+
+
+  </section>
+
+  <!-- RESULTADO -->
+  <section class="card full">
+    <h2>📄 Resultado</h2>
+    <textarea id="resultado" placeholder="Script final aparecerá aqui"></textarea>
+    <div class="actions">
+      <button class="button primary" onclick="mostrarLogs()"> Logs</button>
+      <button class="button primary" onclick="copiar()"> Copiar</button>
+      <button class="button primary" onclick="baixar()"> Baixar </button>
+      <button class="button green" onclick="distribuir()">Distribuir Tarefas</button>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
