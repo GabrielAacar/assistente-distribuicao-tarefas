@@ -13,6 +13,21 @@
         <p id="loadingText">Processando...</p>
     </div>
 
+    <div id="alertModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Título do Alerta</h3>
+                <span class="close-modal" onclick="fecharModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Mensagem do alerta aqui...</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="fecharModal()">Entendi</button>
+            </div>
+        </div>
+    </div>
+
     <header>
         Distribuidor de Tarefas PSL (TN5250 Automation)
     </header>
@@ -47,6 +62,12 @@
     <main>
         
         <div class="card">
+            <div class="card-header-row">
+                <label for="jsonInput">1. Entrada de Tarefas (JSON Array)</label>
+                <button class="btn-small-action" onclick="carregarDadosExemplo()" title="Carregar dados de teste">
+                    ↻ Carregar Exemplo
+                </button>
+            </div>
             <label for="jsonInput">1. Entrada de Tarefas (JSON Array)</label>
             <textarea id="jsonInput" placeholder="Aguardando carga de dados..."></textarea>
         </div>

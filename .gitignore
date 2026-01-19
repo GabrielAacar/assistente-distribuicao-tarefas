@@ -1,5 +1,6 @@
 # Ignorar .venv
 backend/.venv/
+teste.js
 
 # Ignorar pycache
 backend/**/*.pyc

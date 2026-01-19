@@ -1,3 +1,5 @@
+var form = latromi.formManager.getFormInstance();
+
 // --- 1. Configurações e Storage ---
 const USERS_STORAGE_KEY = 'team_task_users';
 const FILTER_STORAGE_KEY = 'team_task_filter_value';
@@ -26,12 +28,30 @@ function salvarUsuarios() {
     renderizarUsuarios();
 }
 
+function removerUsuario(index) { usuarios.splice(index, 1); salvarUsuarios(); }
+
 function renderizarUsuarios() {
     const lista = document.getElementById('userList');
     lista.innerHTML = '';
+
     usuarios.forEach((user, index) => {
         const li = document.createElement('li');
-        li.innerHTML = `<span>${user}</span><button class="btn-remove" onclick="removerUsuario(${index})">×</button>`;
+        
+        // CORREÇÃO: createElement (com 'e')
+        const span = document.createElement('span'); 
+        const btn = document.createElement('button');
+        
+        btn.className = 'btn-remove';
+        btn.innerText = '×';
+        
+        // O uso do addEventListener aqui é excelente pois mantém o escopo correto
+        btn.addEventListener('click', () => removerUsuario(index));
+
+        // innerText é mais seguro que innerHTML para nomes de usuários
+        span.innerText = user; 
+        
+        li.appendChild(span);
+        li.appendChild(btn);
         lista.appendChild(li);
     });
 }
@@ -41,7 +61,7 @@ function adicionarUsuario() {
     if (nome) { usuarios.push(nome); document.getElementById('newUserInput').value = ''; salvarUsuarios(); }
 }
 
-function removerUsuario(index) { usuarios.splice(index, 1); salvarUsuarios(); }
+
 
 
 // --- 2. Controle Visual ---
@@ -64,6 +84,52 @@ function mostrarStatus(msg, tipo) {
     el.textContent = msg;
     el.className = `status-msg status-${tipo}`;
     setTimeout(() => { el.className = 'status-msg'; }, 5000);
+}
+
+// --- NOVO: Lógica do Modal ---
+function abrirModal(titulo, mensagem) {
+    document.getElementById('modalTitle').innerText = titulo;
+    document.getElementById('modalMessage').innerHTML = mensagem; // Permite HTML simples como <br>
+    document.getElementById('alertModal').classList.add('active');
+}
+
+function fecharModal() {
+    document.getElementById('alertModal').classList.remove('active');
+}
+
+// Fecha o modal se clicar fora da caixa branca
+window.onclick = function(event) {
+    const modal = document.getElementById('alertModal');
+    if (event.target == modal) {
+        fecharModal();
+    }
+}
+
+// Função chamada pelo botão "Carregar Exemplo"
+function carregarDadosExemplo() {
+    toggleLoading(true, "Carregando dados de exemplo...");
+    
+    try {
+        // Forçar o trigger
+        form.raiseFieldEvent('btn_get_string', 'Click');
+
+        // Inicia Watcher
+        waitForVariable(() => form.getVariableValue('VString_js'), 5000, 100, "Aguardando carga de dados...")
+        .then((valor) => {
+            console.log("Watcher: Dados carregados com sucesso.");
+            mostrarStatus("Dados de teste carregados.", "success");
+            const string_json = form.getVariableValue('VString_js');
+            const jsonFormatado = `[${string_json.trim().replace(/\n/g, ',')}]`;
+            document.getElementById('jsonInput').value = jsonFormatado;
+            
+        })
+        .catch((erro) => {
+            console.warn(erro.message);
+        });
+    } catch (error) {
+        console.error("Erro ao carregar dados de exemplo:", error);
+        abrirModal('Erro', 'Não foi possível carregar os dados de exemplo. Verifique o console para mais detalhes.');
+    }
 }
 
 
@@ -207,8 +273,8 @@ function montarTextoPSL(stringIds, stringUsuarios, stringPrioridades, username, 
 # -----------------------------------------------------------
 
 # Definindo variaveis de usuário e senha
-USER = ${username}
-PASSWORD = ${password}
+USER = "${username}"
+PASSWORD = "${password}"
 
 # Configurações do terminal
 set comm-type tn5250
@@ -218,11 +284,11 @@ set telnet-port 23
 
 # Definindo variaveis utils
 # Array / Lista de tarefas a serem processadas "TASK1 TASK2 TASK3 ..."
-TASKS = ${stringIds}
+TASKS = {${stringIds} }
 # Array / Lista de usuarios seguindo a ordem de tarefas "USER1 USER2 USER3 ..."
-USERS = ${stringUsuarios}
+USERS = { ${stringUsuarios} }
 # Array / Lista de prioridades a ordem de tarefas "01 02 03 ..."
-PRIORITIES = ${stringPrioridades}
+PRIORITIES = { ${stringPrioridades} }
 
 ok = [session open]
 if {$ok == 0} {return}
@@ -298,7 +364,7 @@ for {i = 0} {"[lindex $TASKS $i]" != ""} {incr i} {
     wait system
     
     # Ajuste na leitura da tela para evitar erro de quebra de linha
-    if {"[screen-rect 06 036 06 034]" == "[lindex $TASKS $i]\\n"} {
+    if {"[screen-rect 06 036 06 044]" != "[lindex $TASKS $i]\\n"} {
         puts $outfile "[lindex $TASKS $i] - NOK\\n"
         send <F12>
         wait system
@@ -344,7 +410,7 @@ for {i = 0} {"[lindex $TASKS $i]" != ""} {incr i} {
 close $outfile
 
 # Mensagem de finalização
-message "Atualização de tasks concluída!"
+message "Atualizacao de tasks concluida!"
 `;
 }
 
@@ -393,6 +459,7 @@ function waitForVariable(getter, timeoutMs = 10000, checkIntervalMs = 100, title
             } else if (Date.now() - startTime >= timeoutMs) {
                 clearInterval(interval);
                 reject(new Error("Timeout: Variável não preenchida."));
+                abrirModal("Timeout", "Aguardando dados excedeu o tempo limite. Dados não preenchidos.");
                 toggleLoading(false);
             }
         }, checkIntervalMs);
@@ -425,7 +492,7 @@ var string_json = `{"dt_ref":"0097879311","task_id":"081471500","stage_id":"STG4
 {"dt_ref":"0097897667","task_id":"081487490","stage_id":"STG102","local_ref":"HR1 RL245C"}`;
 
 // Carregar dados de teste após 2 segundos
-setTimeout(() => {
+/*setTimeout(() => {
     // Transforma a string de objetos separados por quebra de linha em um Array JSON válido
     // 1. Quebra por linha
     // 2. Filtra linhas vazias
@@ -433,14 +500,40 @@ setTimeout(() => {
     // 4. Envolve em colchetes []
     const jsonFormatado = `[${string_json.trim().replace(/\n/g, ',')}]`;
     document.getElementById('jsonInput').value = jsonFormatado;
-}, 2000);
+}, 2000);*/
 
 // Inicia Watcher
-waitForVariable(() => document.getElementById('jsonInput').value, 5000, 100, "Aguardando carga de dados...")
+waitForVariable(() => form.getVariableValue('VString_js'), 5000, 100, "Aguardando carga de dados...")
     .then((valor) => {
         console.log("Watcher: Dados carregados com sucesso.");
         mostrarStatus("Dados de teste carregados.", "success");
+        const string_json = form.getVariableValue('VString_js');
+        const jsonFormatado = `[${string_json.trim().replace(/\n/g, ',')}]`;
+        document.getElementById('jsonInput').value = jsonFormatado;
+        
     })
     .catch((erro) => {
         console.warn(erro.message);
     });
+    
+// ----- Não apagar aqui ------
+const btn_distr = document.getElementById('btn_ac_distr');
+btn_distr.addEventListener('click', processarDistribuicao);
+
+
+const btn_add_user = document.getElementById('btn_add_user');
+btn_add_user.addEventListener('click', adicionarUsuario);
+
+const btn_small_action = document.getElementById('btn_small_action');
+btn_small_action.addEventListener('click', carregarDadosExemplo);
+
+const span_close = document.getElementById('span_close');
+span_close.addEventListener('click', fecharModal);
+
+const btn_close_modal = document.getElementById('btn_close_modal');
+btn_close_modal.addEventListener('click', fecharModal);
+
+const textArea = document.getElementById('jsonInput');
+textArea.readOnly = true;
+
+renderizarUsuarios();

@@ -89,7 +89,7 @@ for {i = 0} {"[lindex $TASKS $i]" != ""} {incr i} {
     send <enter>
     wait system
     
-    if {"[screen-rect 06 036 06 034]" == "[lindex $TASKS $i]\n"} {
+    if {"[screen-rect 06 036 06 034]" != "[lindex $TASKS $i]\n"} {
         puts $outfile "[lindex $TASKS $i] - NOK\n"
         send <F12>
         wait system

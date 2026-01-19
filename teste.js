@@ -148,3 +148,57 @@ close $outfile
 message "Atualização de tasks concluída!"
 `;
 }
+
+function renderizarUsuarios() {
+    const lista = document.getElementById('userList');
+    lista.innerHTML = '';
+    usuarios.forEach((user, index) => {
+        const li = document.createElement('li');
+        const span = document.creatElement('span');
+        const btn = document.createElement('button');
+        
+        btn.className = 'btn-remove';
+        btn.innerText = '×';
+        btn.addEventListener('click', () => removerUsuario(index));
+
+        span.innerHTML = `${user}`;
+        li.appendChild(span);
+        li.appendChild(btn);
+        lista.appendChild(li);
+    });
+}
+
+function adicionarUsuario() {
+    const nome = document.getElementById('newUserInput').value.trim();
+    if (nome) { usuarios.push(nome); document.getElementById('newUserInput').value = ''; salvarUsuarios(); }
+}
+
+USER = `"${username}"`
+PASSWORD = `"${password}"`
+
+// Função chamada pelo botão "Carregar Exemplo"
+function carregarDadosExemplo() {
+    toggleLoading(true, "Carregando dados de exemplo...");
+    
+    try {
+        // Forçar o trigger
+        form.raiseFieldEvent('btn_get_string', 'Click');
+
+        // Inicia Watcher
+        waitForVariable(() => form.getVariableValue('VString_js'), 5000, 100, "Aguardando carga de dados...")
+        .then((valor) => {
+            console.log("Watcher: Dados carregados com sucesso.");
+            mostrarStatus("Dados de teste carregados.", "success");
+            const string_json = form.getVariableValue('VString_js');
+            const jsonFormatado = `[${string_json.trim().replace(/\n/g, ',')}]`;
+            document.getElementById('jsonInput').value = jsonFormatado;
+            
+        })
+        .catch((erro) => {
+            console.warn(erro.message);
+        });
+    } catch (error) {
+        console.error("Erro ao carregar dados de exemplo:", error);
+        abrirModal('Erro', 'Não foi possível carregar os dados de exemplo. Verifique o console para mais detalhes.');
+    }
+}
