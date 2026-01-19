@@ -1,83 +1,92 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Distribuição de Tarefas</title>
-  <link rel="stylesheet" href="styles/style.css">
-  <link rel="stylesheet" href="styles/modal.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distribuidor de Tarefas - Team Balancer</title>
+    <link rel="stylesheet" href="styles/style.css">
 </head>
 <body>
 
-<header>
-  <h1>📦 Painel de Distribuição de Tarefas</h1>
-</header>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p id="loadingText">Processando...</p>
+    </div>
 
-<main class="grid">
+    <header>
+        Distribuidor de Tarefas PSL (TN5250 Automation)
+    </header>
 
-  <!-- IMPORTAÇÃO -->
-  <section class="card fx-column-down">
-    <h2>1️⃣ Importar relatório de tarefas</h2>
-    <input type="file" id="fileInput">
-    <label for="fileInput" class="button">📂 Selecionar arquivo</label>
-    <small>CSV ou Excel</small>
-  </section>
-
-  <!-- PARÂMETROS -->
-  <section class="card ">
-    <h2>2️⃣ Quantidade máxima por DT</h2>
-    <input type="number" id="defaultMax" placeholder="Valor padrão" value="3" />
-  </section>
-
-  <!-- USUÁRIOS POR ZONA -->
-  <section class="card fx-column-down">
-    <h2>3️⃣ Lista de DTs</h2>
-    <div id="zonas"></div>
-    <button class="button" onclick="addDT()">Inserir DTs</button>
-    <small> Se houver dts especificas, adicione aqui</small>
-  </section>
-
-  <!-- USUÁRIOS POR ZONA -->
-  <section class="card fx-column-down">
-    <h2>4️⃣ Usuários por Zona</h2>
-    
-    <button class="button" onclick="addZona()">Novo Usuario</button>
-    <button class="button red" onclick="clearUsers()"> Limpar Lista</button>
-    <small>💾 Fica salvo no navegador</small>
-  </section>
-
-  <!-- STATUS -->
-  <section class="card full fx-side-by-side">
-
-    <div class="card full fr-fr">
-      <h2>Informações</h2>
-      <div class="full fx-side-by-side">
-        <div class="fr-fr" id="dtParams"></div>
-        <div class="fr-fr" id="zonas">
-          <!-- Distribuição usuarios por zona -->
-          <div class="fx-column-down">
-            <div id="userList"></div>
+    <aside>
+        <h3>Configuração</h3>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="usersPerRefInput" style="color:white; font-size: 0.9rem;">Usuários por Dt Ref</label>
+            <input type="number" id="usersPerRefInput" value="3" min="1" style="width: 100%; padding: 5px; border-radius: 4px; border:none;">
         </div>
-      </div>
-    </div>
 
+        <div style="margin-bottom: 20px; border-top: 1px solid #465c71; padding-top: 10px;">
+            <label style="color:white; font-size: 0.9rem; margin-bottom:5px;">Credenciais WMS</label>
+            <input type="text" id="authUsername" placeholder="Usuário" style="width: 100%; padding: 5px; border-radius: 4px; border:none; margin-bottom: 5px;">
+            <input type="password" id="authPassword" placeholder="Senha" style="width: 100%; padding: 5px; border-radius: 4px; border:none;">
+            <small style="color: #bdc3c7; font-size: 0.7rem;">Usado apenas para gerar o script.</small>
+        </div>
 
-  </section>
+        <h3>Usuários Disponíveis</h3>
+        <div class="user-input-group">
+            <input type="text" id="newUserInput" placeholder="Nome do usuário">
+            <button class="btn-add" onclick="adicionarUsuario()">+</button>
+        </div>
+        <ul id="userList">
+            </ul>
+        <div class="sidebar-footer">
+            <p>Configurações salvas automaticamente.</p>
+        </div>
+    </aside>
 
-  <!-- RESULTADO -->
-  <section class="card full">
-    <h2>📄 Resultado</h2>
-    <textarea id="resultado" placeholder="Script final aparecerá aqui"></textarea>
-    <div class="actions">
-      <button class="button primary" onclick="mostrarLogs()"> Logs</button>
-      <button class="button primary" onclick="copiar()"> Copiar</button>
-      <button class="button primary" onclick="baixar()"> Baixar </button>
-      <button class="button green" onclick="distribuir()">Distribuir Tarefas</button>
-    </div>
-  </section>
+    <main>
+        
+        <div class="card">
+            <label for="jsonInput">1. Entrada de Tarefas (JSON Array)</label>
+            <textarea id="jsonInput" placeholder="Aguardando carga de dados..."></textarea>
+        </div>
 
-</main>
+        <div class="card">
+            <label for="filterInput">2. Filtro de Locais (Opcional)</label>
+            <input type="text" id="filterInput" placeholder="Ex: STG408, HR1. Deixe vazio para processar tudo.">
+        </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="app.js"></script>
+        <div class="actions">
+            <button class="btn-primary" onclick="processarDistribuicao()">Distribuir Tarefas e Gerar Script</button>
+        </div>
+
+        <div id="statusMessage" class="status-msg"></div>
+
+        <div id="tableContainer" class="card" style="display: none;">
+            <label>Visualização da Distribuição</label>
+            <div class="table-responsive">
+                <table id="distributionTable">
+                    <thead>
+                        <tr>
+                            <th>Dt Ref</th>
+                            <th>Prioridade</th>
+                            <th>ID Tarefa</th>
+                            <th>Local</th>
+                            <th>Usuário</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="outputContainer" class="card">
+            <label>Script Gerado (Automação Terminal)</label>
+            <pre id="pslOutput"></pre>
+        </div>
+
+    </main>
+
+    <script src="app.js"></script>
 </body>
 </html>
