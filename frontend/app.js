@@ -1,4 +1,4 @@
-var form = latromi.formManager.getFormInstance();
+//var form = latromi.formManager.getFormInstance();
 
 // --- 1. Configurações e Storage ---
 const USERS_STORAGE_KEY = 'team_task_users';
@@ -111,14 +111,28 @@ function carregarDadosExemplo() {
     
     try {
         // Forçar o trigger
-        form.raiseFieldEvent('btn_get_string', 'Click');
+        //form.raiseFieldEvent('btn_get_string', 'Click');
+
+        //teste de carga string_json já está declarada globalmente acima
+        setTimeout(() => {
+            // Transforma a string de objetos separados por quebra de linha em um Array JSON válido
+            // 1. Quebra por linha
+            // 2. Filtra linhas vazias
+            // 3. Junta com vírgulas
+            // 4. Envolve em colchetes []
+            const jsonFormatado = `[${string_json.trim().replace(/\n/g, ',')}]`;
+            document.getElementById('jsonInput').value = jsonFormatado;
+            toggleLoading(false);
+        }, 1000);
 
         // Inicia Watcher
-        waitForVariable(() => form.getVariableValue('VString_js'), 5000, 100, "Aguardando carga de dados...")
+        //waitForVariable(() => form.getVariableValue('VString_js'), 5000, 100, "Aguardando carga de dados...")
+        waitForVariable(() => string_json, 5000, 100, "Aguardando carga de dados...")
         .then((valor) => {
             console.log("Watcher: Dados carregados com sucesso.");
             mostrarStatus("Dados de teste carregados.", "success");
-            const string_json = form.getVariableValue('VString_js');
+            //const string_json = form.getVariableValue('VString_js');
+
             const jsonFormatado = `[${string_json.trim().replace(/\n/g, ',')}]`;
             document.getElementById('jsonInput').value = jsonFormatado;
             
@@ -503,11 +517,12 @@ var string_json = `{"dt_ref":"0097879311","task_id":"081471500","stage_id":"STG4
 }, 2000);*/
 
 // Inicia Watcher
-waitForVariable(() => form.getVariableValue('VString_js'), 5000, 100, "Aguardando carga de dados...")
+//waitForVariable(() => form.getVariableValue('VString_js'), 5000, 100, "Aguardando carga de dados...")
+waitForVariable(() => string_json, 5000, 100, "Aguardando carga de dados...")
     .then((valor) => {
         console.log("Watcher: Dados carregados com sucesso.");
         mostrarStatus("Dados de teste carregados.", "success");
-        const string_json = form.getVariableValue('VString_js');
+        //const string_json = form.getVariableValue('VString_js');
         const jsonFormatado = `[${string_json.trim().replace(/\n/g, ',')}]`;
         document.getElementById('jsonInput').value = jsonFormatado;
         
